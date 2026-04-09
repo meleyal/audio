@@ -1,0 +1,5 @@
+gradio
+adtof-pytorch @ git+https://github.com/xavriley/ADTOF-pytorch.git
+librosa
+numpy
+pretty_midi

@@ -1,0 +1,17 @@
+[project]
+name = "slice"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "allin1>=1.1.0",
+    "ffmpeg-python>=0.2.0",
+    "gradio>=6.11.0",
+    "librosa>=0.11.0",
+    "madmom",
+    "numpy>=2.4.4",
+    "torch",
+]
+
+[tool.uv.sources]
+madmom = { git = "https://github.com/CPJKU/madmom" }
