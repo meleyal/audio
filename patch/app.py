@@ -1,8 +1,3 @@
-"""
-patch
-Pipeline: upload stem → syntheon Vital patch
-"""
-
 import os
 import shutil
 import tempfile
@@ -33,9 +28,9 @@ def pad_or_trim_to_4s(audio_path: str, session_dir: str) -> str:
     Resample to 16kHz first, then pad/trim — this makes syntheon's internal
     librosa resample a no-op and avoids off-by-one rounding errors.
     """
+    import soundfile as sf
     import torch
     import torchaudio
-    import soundfile as sf
 
     TARGET_SR = 16_000
     TARGET_SAMPLES = 4 * TARGET_SR  # exactly 64000
@@ -110,7 +105,7 @@ def on_process(audio_file, state):
 with gr.Blocks(title="patch") as demo:
     gr.Markdown(
         "# patch\n"
-        "Upload a stem → generate a Vital synth patch via Syntheon."
+        "Upload a stem → generate a [Vital](https://vital.audio/) synth patch via [Syntheon](https://github.com/gudgud96/syntheon)."
     )
 
     state = gr.State({})

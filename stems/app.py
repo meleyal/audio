@@ -43,8 +43,8 @@ def sf_load(audio_path: str):
 
 def separate_stems(audio_path: str, session_dir: str) -> dict[str, str]:
     """Run htdemucs on audio_path, write stems to session_dir, return {name: path}."""
-    import torch
     import soundfile as sf
+    import torch
     from demucs.apply import apply_model
     from demucs.audio import convert_audio
 
@@ -101,7 +101,7 @@ def on_separate(audio_file, state):
 with gr.Blocks(title="stems") as demo:
     gr.Markdown(
         "# stems\n"
-        "Upload any audio → separate into stems via Demucs (htdemucs)."
+        "Upload any audio → separate into stems via [Demucs](https://github.com/adefossez/demucs)."
     )
 
     state = gr.State({})

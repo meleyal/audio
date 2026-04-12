@@ -1,11 +1,3 @@
-"""
-Audio -> MIDI drum pattern extractor for isolated drum loops.
-
-Pipeline:
-  1. ADTOF-pytorch (Frame_RNN) transcribes the input audio to onset times + 5 drum classes.
-  2. Onsets are written as a General MIDI drum file with pretty_midi.
-"""
-
 import tempfile
 from pathlib import Path
 
@@ -60,7 +52,7 @@ def transcribe(audio_path: str):
 with gr.Blocks(title="drums") as demo:
     gr.Markdown(
         "# drums\n"
-        "Upload a drum loop → extract a MIDI drum pattern via ADTOF."
+        "Upload a drum loop → extract a MIDI drum pattern via [ADTOF-pytorch](https://github.com/xavriley/ADTOF-pytorch)."
     )
     with gr.Row():
         with gr.Column():

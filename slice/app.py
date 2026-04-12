@@ -37,17 +37,18 @@ if _ta_spec:
         if _tc_old in _tc_src and _tc_new not in _tc_src:
             _tc_path.write_text(_tc_src.replace(_tc_old, _tc_new))
 
-import gradio as gr
-import allin1
-import subprocess
-import tempfile
 import os
-import zipfile
 import re
+import subprocess
 import sys
+import tempfile
 import threading
 import time
+import zipfile
 from concurrent.futures import ThreadPoolExecutor
+
+import allin1
+import gradio as gr
 import torch
 
 DEVICE = "mps" if torch.backends.mps.is_available() else "cpu"
@@ -245,7 +246,7 @@ def on_slice():
 with gr.Blocks(title="slice") as demo:
     gr.Markdown(
         "# slice\n"
-        "Upload any audio → slice into loop-ready WAV files via all-in-one."
+        "Upload any audio → slice into loop-ready WAV files via [all-in-one](https://github.com/mir-aidj/all-in-one)."
     )
 
     audio_input = gr.Audio(label="Audio file", type="filepath", sources=["upload"])

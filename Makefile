@@ -1,4 +1,4 @@
-APPS = drums midi patch slice stems voice
+APPS = drums midi patch slice stems voice mcp
 
 $(APPS):
 	cd $@ && uv run --with-requirements requirements.txt gradio app.py
