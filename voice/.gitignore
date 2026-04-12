@@ -11,6 +11,7 @@
 *.bin
 *.wav
 *.txt
+!requirements.txt
 *.zip
 *.png
 *.safetensors

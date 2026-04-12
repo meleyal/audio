@@ -1,0 +1,39 @@
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+# Core dependencies
+setuptools==81.0.0
+numpy==2.4.4
+requests
+tqdm
+wget
+
+# Audio processing
+ffmpeg-python>=0.2.0
+faiss-cpu==1.13.2
+librosa==0.11.0
+scipy==1.17.1
+soundfile==0.13.1
+noisereduce
+pedalboard
+stftpitchshift
+soxr
+
+# Machine learning
+numba==0.65.0
+torch==2.7.1+cu128
+torchaudio==2.7.1+cu128
+torchvision==0.22.1+cu128
+torchcrepe
+torchfcpe
+einops
+transformers==5.4.0
+
+# UI
+matplotlib==3.10.8
+gradio==6.10.0
+
+# Utilities
+regex
+edge-tts==7.2.8
+beautifulsoup4
+psutil
