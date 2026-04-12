@@ -42,7 +42,7 @@ def extract_midi(audio_path: str, session_dir: str) -> str:
     bp = load_basic_pitch()
     _, midi_data, _ = predict(audio_path, bp)
 
-    out_path = str(Path(session_dir) / "output.mid")
+    out_path = str(Path(session_dir) / f"{Path(audio_path).stem}.mid")
     midi_data.write(out_path)
     return out_path
 

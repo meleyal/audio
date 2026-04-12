@@ -75,7 +75,7 @@ def generate_vital_patch(stem_path: str, session_dir: str) -> str:
         try:
             os.chdir(str(work_dir))
             out_fname, _ = infer_params(padded_path, "vital", enable_eval=False)
-            dest = Path(session_dir) / "output.vital"
+            dest = Path(session_dir) / f"{Path(stem_path).stem}.vital"
             shutil.copy2(str(work_dir / out_fname), str(dest))
         finally:
             os.chdir(original_cwd)

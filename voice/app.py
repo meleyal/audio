@@ -4,18 +4,13 @@ import shutil
 import sys
 import tempfile
 from functools import lru_cache
-from typing import Any
+from pathlib import Path
 
 # Prevent OpenMP runtime conflicts between PyTorch and faiss on macOS
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 os.environ.setdefault("OMP_NUM_THREADS", "1")
 
 import gradio as gr
-
-IS_HF_SPACE = os.environ.get("SPACE_ID") is not None
-DEFAULT_SERVER_NAME = "0.0.0.0" if IS_HF_SPACE else "127.0.0.1"
-DEFAULT_PORT = 7860 if IS_HF_SPACE else 6969
-MAX_PORT_ATTEMPTS = 10
 
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -67,7 +62,9 @@ def convert(model_file, index_file, audio_file):
     if audio_file is None:
         return None, "Please upload an audio file."
 
-    output_path = tempfile.mktemp(suffix=".wav")
+    audio_stem = Path(audio_file).stem
+    model_stem = Path(model_file).stem
+    output_path = str(Path(tempfile.mkdtemp()) / f"{audio_stem}_{model_stem}.wav")
     index_path = index_file if index_file is not None else ""
 
     _voice_converter().convert_audio(
@@ -110,14 +107,14 @@ def convert(model_file, index_file, audio_file):
     return output_path, "Done."
 
 
-with gr.Blocks(title="voice") as app:
+with gr.Blocks(title="voice") as demo:
     gr.Markdown(
         "# voice\n"
         "Upload a voice model and vocals → convert via RVC/Applio."
     )
 
     gr.Markdown("### Voice model")
-    gr.Markdown("Search for [RVC voice models](www.google.com/search?q=rvc+models).")
+    gr.Markdown("Search for [RVC voice models](https://www.google.com/search?q=rvc+models).")
     model_file = gr.File(
         label="Model file (.pth)",
         file_types=[".pth"],
@@ -148,36 +145,6 @@ with gr.Blocks(title="voice") as app:
     index_file.change(lambda f: _save_file(f, ".index"), inputs=index_file, outputs=[])
 
 
-def launch_gradio(server_name: str, server_port: int) -> None:
-    app.launch(
-        share="--share" in sys.argv,
-        inbrowser="--open" in sys.argv,
-        server_name=server_name,
-        server_port=server_port,
-        allowed_paths=[UPLOADS_DIR],
-        css="footer{display:none !important}",
-    )
-
-
-def get_value_from_args(key: str, default: Any = None) -> Any:
-    if key in sys.argv:
-        index = sys.argv.index(key) + 1
-        if index < len(sys.argv):
-            return sys.argv[index]
-    return default
-
-
 if __name__ == "__main__":
-    port = int(get_value_from_args("--port", DEFAULT_PORT))
-    server = get_value_from_args("--server-name", DEFAULT_SERVER_NAME)
+    demo.launch(allowed_paths=[UPLOADS_DIR])
 
-    for _ in range(MAX_PORT_ATTEMPTS):
-        try:
-            launch_gradio(server, port)
-            break
-        except OSError:
-            print(f"Failed to launch on port {port}, trying again on port {port - 1}...")
-            port -= 1
-        except Exception as error:
-            print(f"An error occurred launching Gradio: {error}")
-            break

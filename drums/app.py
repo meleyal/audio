@@ -7,6 +7,7 @@ Pipeline:
 """
 
 import tempfile
+from pathlib import Path
 
 import gradio as gr
 import librosa
@@ -21,7 +22,7 @@ def transcribe(audio_path: str):
     if audio_path is None:
         return None, None, "Please upload a drum loop."
 
-    out_path = tempfile.mktemp(suffix=".mid")
+    out_path = str(Path(tempfile.mkdtemp()) / f"{Path(audio_path).stem}.mid")
     transcribe_to_midi(audio_path, out_path)
 
     pm = pretty_midi.PrettyMIDI(out_path)
