@@ -1,3 +1,2 @@
-basic-pitch>=0.3.0
 gradio>=6.0.0
 onnxruntime
