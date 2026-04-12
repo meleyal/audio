@@ -242,12 +242,10 @@ def on_slice():
     return gr.update(value=tmp.name, visible=True)
 
 
-with gr.Blocks(title="AudioSlice") as demo:
+with gr.Blocks(title="slice") as demo:
     gr.Markdown(
-        "# AudioSlice\n"
-        "Upload an audio file to slice it into loop-ready WAV files. "
-        "Uses [all-in-one](https://github.com/mir-aidj/all-in-one) for beat and structure detection, "
-        "and FFmpeg for sample-accurate cutting."
+        "# slice\n"
+        "Upload any audio → slice into loop-ready WAV files via all-in-one."
     )
 
     audio_input = gr.Audio(label="Audio file", type="filepath", sources=["upload"])

@@ -1,7 +1,5 @@
-demucs>=4.0.0
-basic-pitch>=0.3.0
-torchcrepe
 git+https://github.com/meleyal/syntheon.git@meleyal.python312-fixes
 gradio>=6.0.0
+soundfile
+torch
 torchaudio
-onnxruntime

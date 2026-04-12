@@ -56,12 +56,10 @@ def transcribe(audio_path: str):
     return out_path, rows, summary
 
 
-with gr.Blocks(title="Audio → MIDI Drum Pattern") as demo:
+with gr.Blocks(title="drums") as demo:
     gr.Markdown(
-        "# Audio → MIDI Drum Pattern\n"
-        "Upload an isolated drum loop and get back a General MIDI drum file.\n\n"
-        "**Pipeline:** [ADTOF-pytorch](https://github.com/xavriley/ADTOF-pytorch) transcription "
-        "(kick / snare / hi-hat / tom / cymbal) → GM MIDI."
+        "# drums\n"
+        "Upload a drum loop → extract a MIDI drum pattern via ADTOF."
     )
     with gr.Row():
         with gr.Column():

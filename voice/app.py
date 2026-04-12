@@ -59,17 +59,10 @@ import assets.themes.loadThemes as loadThemes
 my_applio = loadThemes.load_theme() or "ParityError/Interstellar"
 
 # Define Gradio interface
-with gr.Blocks(title="Applio") as Applio:
-    gr.Markdown("# Applio")
+with gr.Blocks(title="voice") as Applio:
     gr.Markdown(
-        i18n(
-            "A simple, high-quality voice conversion tool focused on ease of use and performance."
-        )
-    )
-    gr.Markdown(
-        i18n(
-            "[Support](https://discord.gg/urxFjYmYYh) — [GitHub](https://github.com/IAHispano/Applio)"
-        )
+        "# voice\n"
+        "Upload any audio → convert voice via RVC."
     )
     with gr.Tab(i18n("Inference")):
         inference_tab()
