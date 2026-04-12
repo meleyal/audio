@@ -41,18 +41,23 @@ def _voice_converter():
 def _get_saved(ext):
     for f in os.listdir(UPLOADS_DIR):
         if f.endswith(ext):
-            return os.path.join(UPLOADS_DIR, f)
+            path = os.path.join(UPLOADS_DIR, f)
+            if os.path.isfile(path):
+                return path
     return None
 
 
 def _save_file(src, ext):
-    if src is None:
-        return None
     for f in os.listdir(UPLOADS_DIR):
         if f.endswith(ext):
             os.remove(os.path.join(UPLOADS_DIR, f))
-    dest = os.path.join(UPLOADS_DIR, os.path.basename(src))
-    shutil.copy(src, dest)
+    if src is None:
+        return None
+    # Preserve original stem but force the correct extension (Gradio may strip it in temp dir)
+    stem = os.path.splitext(os.path.basename(src))[0]
+    dest = os.path.join(UPLOADS_DIR, stem + ext)
+    if os.path.abspath(src) != os.path.abspath(dest):
+        shutil.copy(src, dest)
     return dest
 
 
@@ -108,31 +113,29 @@ def convert(model_file, index_file, audio_file):
 with gr.Blocks(title="voice") as app:
     gr.Markdown(
         "# voice\n"
-        "Upload a voice model and vocals → convert via RVC ([Applio](https://applio.org))."
+        "Upload a voice model and vocals → convert via RVC/Applio."
     )
 
     gr.Markdown("### Voice model")
-    gr.Markdown(
-        "Download RVC voice models (.pth + .index) from "
-        "[weights.gg](https://weights.gg) or search Hugging Face for \"RVC model\"."
-    )
+    gr.Markdown("Search for [RVC voice models](www.google.com/search?q=rvc+models).")
     model_file = gr.File(
         label="Model file (.pth)",
         file_types=[".pth"],
-        value=_get_saved(".pth"),
+        value=lambda: _get_saved(".pth"),
     )
     index_file = gr.File(
-        label="Index file (.index, optional)",
+        label="Index file (.index)",
         file_types=[".index"],
-        value=_get_saved(".index"),
+        value=lambda: _get_saved(".index"),
     )
 
-    gr.Markdown("### Input audio")
+    gr.Markdown("### Input vocals")
     audio_input = gr.Audio(label="Vocals", type="filepath")
 
     convert_btn = gr.Button("Convert", variant="primary")
     status = gr.Textbox(label="Status", interactive=False, lines=1, max_lines=1)
 
+    gr.Markdown("### Output vocals")
     audio_output = gr.Audio(label="Converted audio")
 
     convert_btn.click(
@@ -141,8 +144,8 @@ with gr.Blocks(title="voice") as app:
         outputs=[audio_output, status],
     )
 
-    model_file.change(lambda f: _save_file(f, ".pth"), inputs=model_file)
-    index_file.change(lambda f: _save_file(f, ".index"), inputs=index_file)
+    model_file.change(lambda f: _save_file(f, ".pth"), inputs=model_file, outputs=[])
+    index_file.change(lambda f: _save_file(f, ".index"), inputs=index_file, outputs=[])
 
 
 def launch_gradio(server_name: str, server_port: int) -> None:
@@ -151,6 +154,7 @@ def launch_gradio(server_name: str, server_port: int) -> None:
         inbrowser="--open" in sys.argv,
         server_name=server_name,
         server_port=server_port,
+        allowed_paths=[UPLOADS_DIR],
         css="footer{display:none !important}",
     )
 
