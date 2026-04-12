@@ -2,11 +2,6 @@ name: Deploy to HuggingFace
 on:
     push:
         branches: [main]
-    workflow_dispatch:
-        inputs:
-            project:
-                description: 'Project to force-deploy (leave empty to deploy all changed)'
-                required: false
 
 jobs:
     deploy:
@@ -20,16 +15,10 @@ jobs:
                   fetch-depth: 2
             - name: Check for changes
               id: changes
-              run: |
-                  if [ "${{ github.event.inputs.project }}" = "${{ matrix.project }}" ]; then
-                    echo "changed=true" >> $GITHUB_OUTPUT
-                  elif [ -z "${{ github.event.inputs.project }}" ] && git diff --name-only HEAD~1 HEAD | grep -q "^${{ matrix.project }}/"; then
-                    echo "changed=true" >> $GITHUB_OUTPUT
-                  else
-                    echo "changed=false" >> $GITHUB_OUTPUT
-                  fi
+              continue-on-error: true
+              run: git diff --name-only HEAD~1 HEAD | grep -q "^${{ matrix.project }}/"
             - name: Deploy ${{ matrix.project }} to HuggingFace
-              if: steps.changes.outputs.changed == 'true'
+              if: steps.changes.outcome == 'success'
               env:
                   HF_TOKEN: ${{ secrets.HF_TOKEN }}
               run: |
