@@ -1,5 +1,3 @@
---extra-index-url https://download.pytorch.org/whl/cu128
-
 # Core dependencies
 setuptools==81.0.0
 numpy==2.4.4
@@ -20,9 +18,9 @@ soxr
 
 # Machine learning
 numba==0.65.0
-torch==2.7.1+cu128
-torchaudio==2.7.1+cu128
-torchvision==0.22.1+cu128
+torch==2.7.1
+torchaudio==2.7.1
+torchvision==0.22.1
 torchcrepe
 torchfcpe
 einops
@@ -37,3 +35,4 @@ regex
 edge-tts==7.2.8
 beautifulsoup4
 psutil
+pypresence

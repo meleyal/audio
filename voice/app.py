@@ -1,105 +1,156 @@
-import gradio as gr
-import sys
-import os
 import logging
-
+import os
+import shutil
+import sys
+import tempfile
+from functools import lru_cache
 from typing import Any
+
+# Prevent OpenMP runtime conflicts between PyTorch and faiss on macOS
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+
+import gradio as gr
 
 IS_HF_SPACE = os.environ.get("SPACE_ID") is not None
 DEFAULT_SERVER_NAME = "0.0.0.0" if IS_HF_SPACE else "127.0.0.1"
 DEFAULT_PORT = 7860 if IS_HF_SPACE else 6969
 MAX_PORT_ATTEMPTS = 10
 
-# Set up logging
 logging.getLogger("uvicorn").setLevel(logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
-# Add current directory to sys.path
 now_dir = os.getcwd()
 sys.path.append(now_dir)
 
-# Import Tabs
-from tabs.inference.inference import inference_tab
-from tabs.extra.extra import extra_tab
-from tabs.report.report import report_tab
-from tabs.download.download import download_tab
-from tabs.tts.tts import tts_tab
-from tabs.voice_blender.voice_blender import voice_blender_tab
-from tabs.settings.settings import settings_tab
+from rvc.lib.tools.prerequisites_download import prequisites_download_pipeline
 
-# Run prerequisites
-from core import run_prerequisites_script
+prequisites_download_pipeline(pretraineds_hifigan=True, models=True, exe=True)
 
-run_prerequisites_script(
-    pretraineds_hifigan=True,
-    models=True,
-    exe=True,
-)
+UPLOADS_DIR = os.path.join(now_dir, "uploads")
+os.makedirs(UPLOADS_DIR, exist_ok=True)
 
-# Initialize i18n
-from assets.i18n.i18n import I18nAuto
 
-i18n = I18nAuto()
+@lru_cache(maxsize=None)
+def _voice_converter():
+    from rvc.infer.infer import VoiceConverter
 
-# Start Discord presence if enabled
-if not IS_HF_SPACE:
-    from tabs.settings.sections.presence import load_config_presence
-    if load_config_presence():
-        from assets.discord_presence import RPCManager
-        RPCManager.start_presence()
+    return VoiceConverter()
 
-# Check installation
-import assets.installation_checker as installation_checker
 
-installation_checker.check_installation()
+def _get_saved(ext):
+    for f in os.listdir(UPLOADS_DIR):
+        if f.endswith(ext):
+            return os.path.join(UPLOADS_DIR, f)
+    return None
 
-# Load theme
-import assets.themes.loadThemes as loadThemes
 
-my_applio = loadThemes.load_theme() or "ParityError/Interstellar"
+def _save_file(src, ext):
+    if src is None:
+        return None
+    for f in os.listdir(UPLOADS_DIR):
+        if f.endswith(ext):
+            os.remove(os.path.join(UPLOADS_DIR, f))
+    dest = os.path.join(UPLOADS_DIR, os.path.basename(src))
+    shutil.copy(src, dest)
+    return dest
 
-# Define Gradio interface
-with gr.Blocks(title="voice") as Applio:
+
+def convert(model_file, index_file, audio_file):
+    if model_file is None:
+        return None, "Please upload a model (.pth) file."
+    if audio_file is None:
+        return None, "Please upload an audio file."
+
+    output_path = tempfile.mktemp(suffix=".wav")
+    index_path = index_file if index_file is not None else ""
+
+    _voice_converter().convert_audio(
+        audio_input_path=audio_file,
+        audio_output_path=output_path,
+        model_path=model_file,
+        index_path=index_path,
+        pitch=0,
+        index_rate=0.75 if index_path else 0,
+        volume_envelope=1,
+        protect=0.5,
+        f0_method="rmvpe",
+        split_audio=False,
+        f0_autotune=False,
+        f0_autotune_strength=1.0,
+        proposed_pitch=False,
+        proposed_pitch_threshold=155.0,
+        clean_audio=False,
+        clean_strength=0.7,
+        export_format="WAV",
+        embedder_model="contentvec",
+        embedder_model_custom=None,
+        formant_shifting=False,
+        formant_qfrency=1.0,
+        formant_timbre=1.0,
+        post_process=False,
+        reverb=False,
+        pitch_shift=False,
+        limiter=False,
+        gain=False,
+        distortion=False,
+        chorus=False,
+        bitcrush=False,
+        clipping=False,
+        compressor=False,
+        delay=False,
+        sid=0,
+    )
+
+    return output_path, "Done."
+
+
+with gr.Blocks(title="voice") as app:
     gr.Markdown(
         "# voice\n"
-        "Upload any audio → convert voice via RVC."
+        "Upload a voice model and vocals → convert via RVC ([Applio](https://applio.org))."
     )
-    with gr.Tab(i18n("Inference")):
-        inference_tab()
 
-    with gr.Tab(i18n("TTS")):
-        tts_tab()
+    gr.Markdown("### Voice model")
+    gr.Markdown(
+        "Download RVC voice models (.pth + .index) from "
+        "[weights.gg](https://weights.gg) or search Hugging Face for \"RVC model\"."
+    )
+    model_file = gr.File(
+        label="Model file (.pth)",
+        file_types=[".pth"],
+        value=_get_saved(".pth"),
+    )
+    index_file = gr.File(
+        label="Index file (.index, optional)",
+        file_types=[".index"],
+        value=_get_saved(".index"),
+    )
 
-    with gr.Tab(i18n("Voice Blender")):
-        voice_blender_tab()
+    gr.Markdown("### Input audio")
+    audio_input = gr.Audio(label="Vocals", type="filepath")
 
-    with gr.Tab(i18n("Download")):
-        download_tab()
+    convert_btn = gr.Button("Convert", variant="primary")
+    status = gr.Textbox(label="Status", interactive=False, lines=1, max_lines=1)
 
-    with gr.Tab(i18n("Report a Bug")):
-        report_tab()
+    audio_output = gr.Audio(label="Converted audio")
 
-    with gr.Tab(i18n("Extra")):
-        extra_tab()
+    convert_btn.click(
+        convert,
+        inputs=[model_file, index_file, audio_input],
+        outputs=[audio_output, status],
+    )
 
-    with gr.Tab(i18n("Settings")):
-        settings_tab()
-
-    gr.Markdown("""
-    <div style="text-align: center; font-size: 0.9em; text-color: a3a3a3;">
-    By using Applio, you agree to comply with ethical and legal standards, respect intellectual property and privacy rights, avoid harmful or prohibited uses, and accept full responsibility for any outcomes, while Applio disclaims liability and reserves the right to amend these terms.
-    </div>
-    """)
+    model_file.change(lambda f: _save_file(f, ".pth"), inputs=model_file)
+    index_file.change(lambda f: _save_file(f, ".index"), inputs=index_file)
 
 
 def launch_gradio(server_name: str, server_port: int) -> None:
-    Applio.launch(
-        favicon_path="assets/ICON.ico",
+    app.launch(
         share="--share" in sys.argv,
         inbrowser="--open" in sys.argv,
         server_name=server_name,
         server_port=server_port,
-        theme=my_applio,
         css="footer{display:none !important}",
     )
 
@@ -121,9 +172,7 @@ if __name__ == "__main__":
             launch_gradio(server, port)
             break
         except OSError:
-            print(
-                f"Failed to launch on port {port}, trying again on port {port - 1}..."
-            )
+            print(f"Failed to launch on port {port}, trying again on port {port - 1}...")
             port -= 1
         except Exception as error:
             print(f"An error occurred launching Gradio: {error}")
