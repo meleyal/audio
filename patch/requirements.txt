@@ -3,9 +3,6 @@ gradio>=6.0.0
 soundfile
 torch
 torchaudio
-# basic-pitch and its deps (installed without tensorflow via setup.sh,
-# but listed here as fallback in case setup.sh is not executed)
-basic-pitch>=0.3.0
 scipy
 numpy
 librosa
