@@ -110,7 +110,7 @@ def convert(model_file, index_file, audio_file):
 with gr.Blocks(title="voice") as demo:
     gr.Markdown(
         "# voice\n"
-        "Upload an [RVC voice model](https://www.google.com/search?q=rvc+models) and vocals → convert via [RVC/Applio](https://github.com/IAHispano/Applio)."
+        "Upload an [RVC voice model](https://www.google.com/search?q=rvc+models) and vocals → convert via [Applio](https://github.com/IAHispano/Applio)."
     )
 
     gr.Markdown("### Voice model")
